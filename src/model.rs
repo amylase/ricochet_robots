@@ -1,6 +1,7 @@
 use std::cmp::min;
 use std::ops;
 use std::convert::From;
+use std::hash::Hash;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -138,20 +139,26 @@ impl GameSpec {
     }
 
     pub fn is_winning_state(&self, state: &GameState) -> bool {
-        for robot_index in 0..ROBOT_COUNT {
-            if state.robots[robot_index] == self.goal {
-                if self.target_type == TargetType::Any || self.target_type == TargetType::Particular(robot_index) {
-                    return true;
-                }
-            }
+        match self.target_type {
+            TargetType::Any => state.robots.into_iter().any(|position| { position == self.goal }),
+            TargetType::Particular(robot_index) => state.robots[robot_index] == self.goal,
         }
-        return false;
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GameState {
     pub robots: [Point; ROBOT_COUNT],
+}
+
+impl Hash for GameState {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        let mut succinct: i64 = 0;
+        for position in self.robots {
+            succinct = succinct * 256 + position.r as i64 * 16 + position.c as i64;
+        }
+        succinct.hash(state);
+    }
 }
 
 fn calc_up_steps(from: Point, to: Point) -> u8 {
