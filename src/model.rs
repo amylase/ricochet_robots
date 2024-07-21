@@ -10,8 +10,8 @@ pub const WALL_MAP_SIZE: usize = BOARD_SIZE * 2 + 1;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Point {
-    pub r: i32,
-    pub c: i32,
+    pub r: i8,
+    pub c: i8,
 }
 
 impl ops::Add<Point> for Point {
@@ -22,9 +22,9 @@ impl ops::Add<Point> for Point {
     }
 }
 
-#[derive(Debug, Clone, Copy, EnumIter)]
-enum Direction {
-    Up,
+#[derive(Debug, Clone, Copy, Default, EnumIter)]
+pub enum Direction {
+    #[default] Up,
     Down,
     Left,
     Right,
@@ -47,6 +47,12 @@ pub enum TargetType {
     Particular(usize),
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct GameMove {
+    pub robot_index: u8,
+    pub direction: Direction,
+}
+
 #[derive(Debug)]
 pub struct GameSpec {
     pub walls: [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE],
@@ -63,7 +69,7 @@ impl GameSpec {
         return self.walls[wall_position.r as usize][wall_position.c as usize];
     }
 
-    pub fn next_states(&self, current_state: &GameState) -> Vec<GameState> {
+    pub fn next_states(&self, current_state: &GameState) -> Vec<(GameMove, GameState)> {
         let mut results = vec![];
         for robot_index in 0..ROBOT_COUNT {
             for direction in Direction::iter() {
@@ -83,7 +89,7 @@ impl GameSpec {
                 if steps > 0 {
                     let mut next_state = current_state.clone();
                     next_state.robots[robot_index] = position;
-                    results.push(next_state);
+                    results.push((GameMove { robot_index: robot_index as u8, direction } , next_state));
                 }
             }
         }

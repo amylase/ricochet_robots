@@ -1,12 +1,30 @@
+use std::io::{self, BufRead};
+
 mod model;
 mod serialize;
 mod solver;
 
 fn main() {
-    let board = "rKHKNKXIrKM--7--_n---m-----__--Vv------Yv-N-B-_-----Ln-L-m--L-RJk---_XRL--R_-X-g1--j-n--NZ07-XXZf----K--N-BL---Vv----7----X----Zk-----Lj--R__---RLX--n-m------_leXKXAXKVeWDn94ytfICCphpWL97KIP4sVqKkqtUi";
-    let (spec, state) = serialize::load(&board);
+    let stdin = io::stdin();
+    for line in stdin.lock().lines() {
+        let board = line.unwrap();
+        let (spec, state) = serialize::load(&board);
 
-    let result = solver::solve_bfs(&spec, &state);
-    println!("{:?}", result);
+        let result = solver::solve_bfs(&spec, &state);
+        println!("found a solution with {} moves", result.len());
+        for game_move in result {
+            println!("> Move {} to {:?} ", robot_index_to_color(game_move.robot_index), game_move.direction)
+        }
+        // println!("{:?}", result);    
+    }
 }
 
+fn robot_index_to_color(robot_index: u8) -> &'static str {
+    match robot_index {
+        0 => "Red",
+        1 => "Blue",
+        2 => "Green",
+        3 => "Yellow",
+        _ => unreachable!(),
+    }
+}

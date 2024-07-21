@@ -73,7 +73,7 @@ pub fn load(base64: &str) -> (GameSpec, GameState) {
 fn read_point_from_array(arr: &[u8], i: usize) -> Point {
     let ci = i * 2;
     let ri = ci + 1;
-    return Point {r: arr[ri] as i32, c: arr[ci] as i32 };
+    return Point {r: arr[ri] as i8, c: arr[ci] as i8 };
 }
 
 fn base64char_to_index(code: u8) -> u8 {
