@@ -1,9 +1,12 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
+
+
+use fnv::FnvHashMap;
 
 use crate::model::{GameMove, GameSpec, GameState};
 
 pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
-    let mut back_edge: HashMap<GameState, (GameMove, GameState)> = HashMap::new();
+    let mut back_edge = FnvHashMap::default();
 
     let mut q = VecDeque::new();
     q.push_back(initial_state.clone());

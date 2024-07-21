@@ -105,3 +105,13 @@ fn to_ints(base64: &str) -> Vec<u8> {
     }
     return base16;
 }
+
+pub fn robot_index_to_color(robot_index: u8) -> &'static str {
+    match robot_index {
+        0 => "Red",
+        1 => "Blue",
+        2 => "Green",
+        3 => "Yellow",
+        _ => unreachable!(),
+    }
+}

@@ -120,7 +120,7 @@ impl GameSpec {
     }
 
     pub fn next_states(&self, current_state: &GameState) -> Vec<(GameMove, GameState)> {
-        let mut results = vec![];
+        let mut results = Vec::with_capacity(ROBOT_COUNT * 4 - 1);
         for robot_index in 0..ROBOT_COUNT {
             for direction in Direction::iter() {
                 let position = current_state.robots[robot_index]; 
@@ -153,18 +153,18 @@ pub struct GameState {
 
 impl Hash for GameState {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        let mut succinct: i64 = 0;
+        let mut succinct: u64 = 0;
         for position in self.robots {
-            succinct = succinct * 256 + position.r as i64 * 16 + position.c as i64;
+            succinct = succinct << 8 | (position.r as u64) << 4 | position.c as u64;
         }
-        succinct.hash(state);
+        state.write_u64(succinct);
     }
 }
 
 fn calc_up_steps(from: Point, to: Point) -> u8 {
     if from.c != to.c {
         return BOARD_SIZE as u8;
-    } else if from.r < to.r {
+    } else if from.r <= to.r {
         return BOARD_SIZE as u8;
     } else {
         return (from.r - to.r - 1) as u8;

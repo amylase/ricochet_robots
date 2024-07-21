@@ -13,18 +13,7 @@ fn main() {
         let result = solver::solve_bfs(&spec, &state);
         println!("found a solution with {} moves", result.len());
         for game_move in result {
-            println!("> Move {} to {:?} ", robot_index_to_color(game_move.robot_index), game_move.direction)
+            println!("> Move {} to {:?} ", serialize::robot_index_to_color(game_move.robot_index), game_move.direction)
         }
-        // println!("{:?}", result);    
-    }
-}
-
-fn robot_index_to_color(robot_index: u8) -> &'static str {
-    match robot_index {
-        0 => "Red",
-        1 => "Blue",
-        2 => "Green",
-        3 => "Yellow",
-        _ => unreachable!(),
     }
 }
