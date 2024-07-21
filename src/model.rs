@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::ops;
 use std::convert::From;
 use strum::IntoEnumIterator;
@@ -10,8 +11,24 @@ pub const WALL_MAP_SIZE: usize = BOARD_SIZE * 2 + 1;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Point {
-    pub r: i8,
-    pub c: i8,
+    r: i8,
+    c: i8,
+}
+
+impl Point {
+    pub fn new(r: i8, c: i8) -> Point {
+        Point {r, c}
+    }
+
+    fn rot(&self) -> Point {
+        // (1, 2) -> (-2, 1)
+        Point {r: -self.c, c: self.r}
+    }
+
+    fn rrot(&self) -> Point {
+        // (-2, 1) -> (1, 2) 
+        Point {r: self.c, c: -self.r}
+    }
 }
 
 impl ops::Add<Point> for Point {
@@ -22,21 +39,29 @@ impl ops::Add<Point> for Point {
     }
 }
 
+impl ops::Mul<i8> for Point {
+    type Output = Point;
+
+    fn mul(self, rhs: i8) -> Self::Output {
+        return Point { r: self.r * rhs, c: self.c * rhs };
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default, EnumIter)]
 pub enum Direction {
-    #[default] Up,
-    Down,
-    Left,
-    Right,
+    #[default] Up = 0,
+    Down = 1,
+    Left = 2,
+    Right = 3,
 }
 
 impl From<Direction> for Point {
     fn from(direction: Direction) -> Self {
         match direction {
-            Direction::Up => Point { r: -1, c: 0 },
-            Direction::Down => Point { r: 1, c: 0 },
-            Direction::Left => Point { r: 0, c: -1 },
-            Direction::Right => Point { r: 0, c: 1 },
+            Direction::Up => Point::new(-1, 0),
+            Direction::Down => Point::new(1, 0),
+            Direction::Left => Point::new(0, -1),
+            Direction::Right => Point::new(0, 1),
         }
     }
 }
@@ -53,42 +78,58 @@ pub struct GameMove {
     pub direction: Direction,
 }
 
+type WallBoard = [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE];
+type WallCache = [[[u8; 4]; BOARD_SIZE]; BOARD_SIZE];
 #[derive(Debug)]
 pub struct GameSpec {
-    pub walls: [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE],
-    pub goal: Point,
-    pub target_type: TargetType,
+    walls: WallBoard,
+    goal: Point,
+    target_type: TargetType,
+
+    wall_cache: WallCache,
+}
+
+fn _has_wall(walls: &WallBoard, position: Point, direction: Direction) -> bool {
+    let wall_position = position * 2 + Point::new(1, 1) + Point::from(direction);
+    return walls[wall_position.r as usize][wall_position.c as usize];
 }
 
 impl GameSpec {
-    fn has_wall(&self, position: Point, direction: Direction) -> bool {
-        let wall_position = Point {
-            r: position.r * 2 + 1,
-            c: position.c * 2 + 1,
-        } + Point::from(direction);
-        return self.walls[wall_position.r as usize][wall_position.c as usize];
+    pub fn new(walls: WallBoard, goal: Point, target_type: TargetType) -> GameSpec {
+        let mut wall_cache = [[[0; 4]; BOARD_SIZE]; BOARD_SIZE];
+        for r in 0..BOARD_SIZE {
+            for c in 0..BOARD_SIZE {
+                for direction in Direction::iter() {
+                    let mut steps: u8 = 0;
+                    let mut position = Point::new(r as i8, c as i8);
+                    loop {
+                        if _has_wall(&walls, position, direction) {
+                            break;
+                        }
+                        let next_position = position + Point::from(direction);
+                        position = next_position;
+                        steps += 1;
+                    }
+                    wall_cache[r][c][direction as usize] = steps;
+                }
+            }
+        }
+
+        return GameSpec { walls, goal, target_type, wall_cache }
     }
 
     pub fn next_states(&self, current_state: &GameState) -> Vec<(GameMove, GameState)> {
         let mut results = vec![];
         for robot_index in 0..ROBOT_COUNT {
             for direction in Direction::iter() {
-                let mut steps: i32 = 0;
-                let mut position = current_state.robots[robot_index];
-                loop {
-                    if self.has_wall(position, direction) {
-                        break;
-                    }
-                    let next_position = position + Point::from(direction);
-                    if current_state.has_robot(next_position) {
-                        break;
-                    }
-                    position = next_position;
-                    steps += 1;
-                }
+                let position = current_state.robots[robot_index]; 
+                let steps: u8 = min(
+                    self.wall_cache[position.r as usize][position.c as usize][direction as usize], 
+                    current_state.robot_steps(robot_index, direction)
+                );
                 if steps > 0 {
                     let mut next_state = current_state.clone();
-                    next_state.robots[robot_index] = position;
+                    next_state.robots[robot_index] = position + Point::from(direction) * steps as i8;
                     results.push((GameMove { robot_index: robot_index as u8, direction } , next_state));
                 }
             }
@@ -113,9 +154,32 @@ pub struct GameState {
     pub robots: [Point; ROBOT_COUNT],
 }
 
+fn calc_up_steps(from: Point, to: Point) -> u8 {
+    if from.c != to.c {
+        return BOARD_SIZE as u8;
+    } else if from.r < to.r {
+        return BOARD_SIZE as u8;
+    } else {
+        return (from.r - to.r - 1) as u8;
+    }
+}
+
 impl GameState {
-    fn has_robot(&self, position: Point) -> bool {
-        self.robots.into_iter().any(|robot_position| { robot_position == position })
+    fn robot_steps(&self, moving_robot_index: usize, direction: Direction) -> u8 {
+        let mut steps = BOARD_SIZE as u8;
+        for robot_index in 0..ROBOT_COUNT {
+            if robot_index == moving_robot_index {
+                continue;
+            }
+            let steps_candidate = match direction {
+                Direction::Up => calc_up_steps(self.robots[moving_robot_index], self.robots[robot_index]),
+                Direction::Right => calc_up_steps(self.robots[moving_robot_index].rot(), self.robots[robot_index].rot()),
+                Direction::Down => calc_up_steps(self.robots[moving_robot_index].rot().rot(), self.robots[robot_index].rot().rot()),
+                Direction::Left => calc_up_steps(self.robots[moving_robot_index].rrot(), self.robots[robot_index].rrot()),
+            };
+            steps = min(steps, steps_candidate);
+        }
+        return steps;
     }
 }
 

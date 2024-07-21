@@ -65,7 +65,7 @@ pub fn load(base64: &str) -> (GameSpec, GameState) {
         }
     }
 
-    let spec = GameSpec { walls, goal, target_type };
+    let spec = GameSpec::new(walls, goal, target_type);
     let state = GameState { robots };
     return (spec, state);
 }
@@ -73,7 +73,7 @@ pub fn load(base64: &str) -> (GameSpec, GameState) {
 fn read_point_from_array(arr: &[u8], i: usize) -> Point {
     let ci = i * 2;
     let ri = ci + 1;
-    return Point {r: arr[ri] as i8, c: arr[ci] as i8 };
+    return Point::new(arr[ri] as i8, arr[ci] as i8);
 }
 
 fn base64char_to_index(code: u8) -> u8 {
