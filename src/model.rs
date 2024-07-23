@@ -153,11 +153,7 @@ pub struct GameState {
 
 impl Hash for GameState {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        let mut succinct: u64 = 0;
-        for position in self.robots {
-            succinct = succinct << 8 | (position.r as u64) << 4 | position.c as u64;
-        }
-        state.write_u64(succinct);
+        state.write_u32(self.to_u32());
     }
 }
 
@@ -187,6 +183,14 @@ impl GameState {
             steps = min(steps, steps_candidate);
         }
         return steps;
+    }
+
+    pub fn to_u32(&self) -> u32 {
+        let mut x: u32 = 0;
+        for position in self.robots {
+            x = x << 8 | (position.r as u32) << 4 | position.c as u32;
+        }
+        x
     }
 }
 
