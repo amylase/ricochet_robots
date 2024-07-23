@@ -2,7 +2,7 @@ use std::io::{self, BufRead};
 
 mod model;
 mod serialize;
-mod solver;
+mod solvers;
 
 fn main() {
     let stdin = io::stdin();
@@ -10,7 +10,7 @@ fn main() {
         let board = line.unwrap();
         let (spec, state) = serialize::load(&board);
 
-        let result = solver::solve_bfs(&spec, &state);
+        let result = solvers::iddfs::solve(&spec, &state);
         println!("found a solution with {} moves", result.len());
         for game_move in result {
             println!("> Move {} to {:?} ", serialize::robot_index_to_color(game_move.robot_index), game_move.direction)

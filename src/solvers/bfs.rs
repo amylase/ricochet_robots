@@ -5,7 +5,7 @@ use fnv::FnvHashMap;
 
 use crate::model::{GameMove, GameSpec, GameState};
 
-pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
+pub fn solve(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
     let mut back_edge = FnvHashMap::default();
 
     let mut q = VecDeque::new();
