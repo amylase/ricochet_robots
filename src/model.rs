@@ -118,21 +118,18 @@ impl GameSpec {
 
         return GameSpec { walls, goal, target_type, wall_cache }
     }
-
     pub fn next_states(&self, current_state: &GameState) -> Vec<(GameMove, GameState)> {
-        let mut results = Vec::with_capacity(ROBOT_COUNT * 4 - 1);
+        let mut results: Vec<(GameMove, GameState)> = vec![(GameMove { robot_index: 0, direction: Direction::Up}, current_state.clone()); ROBOT_COUNT * 4];
+        let mut ptr = 0;
         for robot_index in 0..ROBOT_COUNT {
             for direction in Direction::iter() {
                 let position = current_state.robots[robot_index]; 
-                let steps: u8 = min(
-                    self.wall_cache[position.r as usize][position.c as usize][direction as usize], 
-                    current_state.robot_steps(robot_index, direction)
-                );
-                if steps > 0 {
-                    let mut next_state = current_state.clone();
-                    next_state.robots[robot_index] = position + Point::from(direction) * steps as i8;
-                    results.push((GameMove { robot_index: robot_index as u8, direction } , next_state));
-                }
+                let wall_steps = self.wall_cache[position.r as usize][position.c as usize][direction as usize];
+                let robot_steps = if wall_steps > 0 { current_state.robot_steps(robot_index, direction) } else { 0 };
+                let steps = min(wall_steps, robot_steps);
+                results[ptr].0 = GameMove { robot_index: robot_index as u8, direction };
+                results[ptr].1.robots[robot_index] = position + Point::from(direction) * steps as i8;
+                ptr += 1;
             }
         }
         return results;
@@ -171,9 +168,6 @@ impl GameState {
     fn robot_steps(&self, moving_robot_index: usize, direction: Direction) -> u8 {
         let mut steps = BOARD_SIZE as u8;
         for robot_index in 0..ROBOT_COUNT {
-            if robot_index == moving_robot_index {
-                continue;
-            }
             let steps_candidate = match direction {
                 Direction::Up => calc_up_steps(self.robots[moving_robot_index], self.robots[robot_index]),
                 Direction::Right => calc_up_steps(self.robots[moving_robot_index].rot(), self.robots[robot_index].rot()),
