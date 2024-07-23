@@ -6,7 +6,6 @@ edition = "2021"
 [dependencies]
 strum = "0.26.3"
 strum_macros = "0.26.4"
-fnv = "1.0.7"
 bitvec = "1.0.1"
 
 [[bin]]
