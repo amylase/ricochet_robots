@@ -118,72 +118,12 @@ pub struct GameMove {
     pub direction: Direction,
 }
 
-pub const GAME_MOVES: [GameMove; ROBOT_COUNT * 4] = [
-    GameMove {
-        robot_index: 0,
-        direction: DIRECTIONS[0],
-    },
-    GameMove {
-        robot_index: 0,
-        direction: DIRECTIONS[1],
-    },
-    GameMove {
-        robot_index: 0,
-        direction: DIRECTIONS[2],
-    },
-    GameMove {
-        robot_index: 0,
-        direction: DIRECTIONS[3],
-    },
-    GameMove {
-        robot_index: 1,
-        direction: DIRECTIONS[0],
-    },
-    GameMove {
-        robot_index: 1,
-        direction: DIRECTIONS[1],
-    },
-    GameMove {
-        robot_index: 1,
-        direction: DIRECTIONS[2],
-    },
-    GameMove {
-        robot_index: 1,
-        direction: DIRECTIONS[3],
-    },
-    GameMove {
-        robot_index: 2,
-        direction: DIRECTIONS[0],
-    },
-    GameMove {
-        robot_index: 2,
-        direction: DIRECTIONS[1],
-    },
-    GameMove {
-        robot_index: 2,
-        direction: DIRECTIONS[2],
-    },
-    GameMove {
-        robot_index: 2,
-        direction: DIRECTIONS[3],
-    },
-    GameMove {
-        robot_index: 3,
-        direction: DIRECTIONS[0],
-    },
-    GameMove {
-        robot_index: 3,
-        direction: DIRECTIONS[1],
-    },
-    GameMove {
-        robot_index: 3,
-        direction: DIRECTIONS[2],
-    },
-    GameMove {
-        robot_index: 3,
-        direction: DIRECTIONS[3],
-    },
-];
+pub static GAME_MOVES: LazyLock<[GameMove; ROBOT_COUNT * 4]> = LazyLock::new(|| {
+    array::from_fn(|i| GameMove {
+        robot_index: i as u8 / 4,
+        direction: DIRECTIONS[i % 4],
+    })
+});
 
 type WallBoard = [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE];
 type WallCache = [[[u8; 4]; BOARD_SIZE]; BOARD_SIZE];
