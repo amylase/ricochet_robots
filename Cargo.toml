@@ -8,15 +8,3 @@ strum = "0.26.3"
 strum_macros = "0.26.4"
 bitvec = "1.0.1"
 itertools = "0.13.0"
-
-[[bin]]
-name = "main"
-path = "src/main.rs"
-
-[[bin]]
-name = "profile"
-path = "src/profile.rs"
-
-[[bin]]
-name = "maximize"
-path = "src/maximize.rs"

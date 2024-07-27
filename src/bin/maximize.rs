@@ -1,6 +1,5 @@
-mod serialize;
-mod model;
-mod solver;
+use ricochet_robots::{serialize, solver, model};
+use model::{GameSpec, GameState, Point};
 
 use std::{collections::{HashSet, VecDeque}, io::{self, BufRead}};
 
@@ -11,7 +10,6 @@ use serialize::dump;
 use strum::IntoEnumIterator;
 
 
-use crate::model::{GameSpec, GameState, Point};
 
 
 fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
