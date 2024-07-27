@@ -1,9 +1,10 @@
+use std::cell::LazyCell;
 use std::{array, cmp::min};
 use std::ops;
 use std::convert::From;
 use std::hash::Hash;
 
-use crate::algorithm::factorial;
+use crate::algorithm::{factorial, permutation_swaps};
 
 pub const ROBOT_COUNT: usize = 4;
 pub const BOARD_SIZE: usize = 16;
@@ -125,8 +126,14 @@ pub const GAME_MOVES: [GameMove; ROBOT_COUNT * 4] = [
 type WallBoard = [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE];
 type WallCache = [[[u8; 4]; BOARD_SIZE]; BOARD_SIZE];
 
-const THREE_PERMUTATION_SWAPS: [usize; 5] = [1, 0, 1, 0, 1];
-const FOUR_PERMUTATION_SWAPS: [usize; 23] = [2, 1, 0, 2, 0, 1, 2, 0, 2, 1, 0, 2, 0, 1, 2, 0, 2, 1, 0, 2, 0, 1, 2];
+const THREE_PERMUTATION_SWAPS: LazyCell<[usize; 5]> = LazyCell::new(|| {
+    let v = permutation_swaps(3);
+    array::from_fn(|i| { *v.get(i).unwrap() })
+});
+const FOUR_PERMUTATION_SWAPS: LazyCell<[usize; 23]> = LazyCell::new(|| {
+    let v = permutation_swaps(4);
+    array::from_fn(|i| { *v.get(i).unwrap() })
+});
 
 #[derive(Debug)]
 pub struct GameSpec {
@@ -259,12 +266,6 @@ pub struct GameState {
     pub robots: [Point; ROBOT_COUNT],
 }
 
-impl Hash for GameState {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        state.write_u32(self.to_u32());
-    }
-}
-
 fn calc_up_steps(from: Point, to: Point) -> u8 {
     if from.c != to.c {
         return BOARD_SIZE as u8;
@@ -300,15 +301,5 @@ impl GameState {
 
     fn has_robot(&self, position: Point) -> bool {
         self.robots.into_iter().any(|robot_position| { robot_position == position })
-    }
-}
-
-#[allow(dead_code)]
-pub fn visualize_walls(spec: &GameSpec) {
-    for r in 0..WALL_MAP_SIZE {
-        for c in 0..WALL_MAP_SIZE {
-            print!("{}", if spec.walls[r][c] || (r % 2 == 0 && c % 2 == 0) { '#' } else { ' ' })
-        }
-        println!("");
     }
 }
