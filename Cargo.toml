@@ -8,3 +8,6 @@ strum = "0.26.3"
 strum_macros = "0.26.4"
 bitvec = "1.0.1"
 itertools = "0.13.0"
+
+[profile.release]
+debug = true

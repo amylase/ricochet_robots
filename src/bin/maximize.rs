@@ -4,12 +4,9 @@ use model::{GameSpec, GameState, Point};
 use std::{collections::{HashSet, VecDeque}, io::{self, BufRead}};
 
 use itertools::Itertools;
-use model::{Direction, BOARD_SIZE, ROBOT_COUNT, WALL_MAP_SIZE};
+use model::{DIRECTIONS, BOARD_SIZE, ROBOT_COUNT, WALL_MAP_SIZE};
 use bitvec::{order::Msb0, bitvec};
 use serialize::dump;
-use strum::IntoEnumIterator;
-
-
 
 
 fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
@@ -21,7 +18,7 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
 
     while !q.is_empty() {
         let position = q.pop_front().unwrap();
-        for direction in Direction::iter() {
+        for direction in DIRECTIONS {
             let next = position + Point::from(direction);
             if next.r < 0 || next.r >= WALL_MAP_SIZE as i8 || next.c < 0 || next.c >= WALL_MAP_SIZE as i8 {
                 continue;
@@ -78,7 +75,12 @@ pub fn reverse_bfs(spec: &GameSpec) -> GameState {
     let mut vis = bitvec![u64, Msb0; 0; 1 << 32];
     let mut q = VecDeque::new();
 
-    for winning_state in all_winning_states(spec) {
+    'mainloop: for winning_state in all_winning_states(spec) {
+        for equivalent_state in spec.equivalent_states_particular(&winning_state, spec.target_type.robot_index(0)) {
+            if *vis.get(equivalent_state.to_u32() as usize).unwrap() {
+                continue 'mainloop;
+            }
+        }
         q.push_back(winning_state.clone());
         vis.set(winning_state.to_u32() as usize, true);    
     }
@@ -87,10 +89,12 @@ pub fn reverse_bfs(spec: &GameSpec) -> GameState {
     while !q.is_empty() {
         visiting_state = q.pop_front();
     
-        for next_state in spec.prev_states(visiting_state.as_ref().unwrap()) {
-            if *vis.get(next_state.to_u32() as usize).unwrap() {
-                continue;
-            }            
+        'mainloop: for next_state in spec.prev_states(visiting_state.as_ref().unwrap()) {
+            for equivalent_state in spec.equivalent_states_particular(&next_state, spec.target_type.robot_index(0)) {
+                if *vis.get(equivalent_state.to_u32() as usize).unwrap() {
+                    continue 'mainloop;
+                }
+            }
             vis.set(next_state.to_u32() as usize, true);
             q.push_back(next_state);
         }
@@ -107,7 +111,7 @@ fn main() {
 
     let farthest_state = reverse_bfs(&spec);
     println!("found a farthest state. solving a problem for this.");
-    println!("https://kaseken.github.io/ricochet_robots/#/?id={:?}", dump(&spec, &farthest_state));
+    println!("https://kaseken.github.io/ricochet_robots/#/?id={}", dump(&spec, &farthest_state));
 
     let result = solver::solve_bfs(&spec, &farthest_state);
     println!("found a solution with {} moves", result.len());
