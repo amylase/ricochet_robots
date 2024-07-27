@@ -11,7 +11,11 @@ fn main() {
         let result = solver::solve_bfs(&spec, &state);
         println!("found a solution with {} moves", result.len());
         for game_move in result {
-            println!("> Move {} to {:?} ", serialize::robot_index_to_color(game_move.robot_index), game_move.direction)
+            println!(
+                "> Move {} to {:?} ",
+                serialize::robot_index_to_color(game_move.robot_index),
+                game_move.direction
+            )
         }
     }
 }

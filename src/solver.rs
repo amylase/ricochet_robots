@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use bitvec::{order::Msb0, bitvec};
+use bitvec::{bitvec, order::Msb0};
 
 use crate::model::{GameMove, GameSpec, GameState, GAME_MOVES};
 
@@ -15,13 +15,13 @@ pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
     let mut final_state: Option<GameState> = None;
     'mainloop: while !q.is_empty() {
         let current_state = q.pop_front().unwrap();
-    
+
         let mut i = -1;
         for next_state in spec.next_states(&current_state) {
             i += 1;
             if *vis.get(next_state.to_u32() as usize).unwrap() {
                 continue;
-            }            
+            }
             back_edge.push((next_state.clone(), i, current_state.clone()));
             vis.set(next_state.to_u32() as usize, true);
             if spec.is_winning_state(&next_state) {

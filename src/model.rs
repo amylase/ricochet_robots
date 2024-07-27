@@ -1,8 +1,8 @@
 use std::cell::LazyCell;
-use std::{array, cmp::min};
-use std::ops;
 use std::convert::From;
 use std::hash::Hash;
+use std::ops;
+use std::{array, cmp::min};
 
 use crate::algorithm::{factorial, permutation_swaps};
 
@@ -18,17 +18,23 @@ pub struct Point {
 
 impl Point {
     pub fn new(r: i8, c: i8) -> Point {
-        Point {r, c}
+        Point { r, c }
     }
 
     fn rot(&self) -> Point {
         // (1, 2) -> (-2, 1)
-        Point {r: -self.c, c: self.r}
+        Point {
+            r: -self.c,
+            c: self.r,
+        }
     }
 
     fn rrot(&self) -> Point {
-        // (-2, 1) -> (1, 2) 
-        Point {r: self.c, c: -self.r}
+        // (-2, 1) -> (1, 2)
+        Point {
+            r: self.c,
+            c: -self.r,
+        }
     }
 }
 
@@ -36,7 +42,10 @@ impl ops::Add<Point> for Point {
     type Output = Point;
 
     fn add(self, rhs: Point) -> Self::Output {
-        return Point { r: self.r + rhs.r, c: self.c + rhs.c };
+        return Point {
+            r: self.r + rhs.r,
+            c: self.c + rhs.c,
+        };
     }
 }
 
@@ -44,7 +53,10 @@ impl ops::Mul<i8> for Point {
     type Output = Point;
 
     fn mul(self, rhs: i8) -> Self::Output {
-        return Point { r: self.r * rhs, c: self.c * rhs };
+        return Point {
+            r: self.r * rhs,
+            c: self.c * rhs,
+        };
     }
 }
 
@@ -56,7 +68,12 @@ pub enum Direction {
     Right = 3,
 }
 
-pub const DIRECTIONS: [Direction; 4] = [Direction::Up, Direction::Down, Direction::Left, Direction::Right];
+pub const DIRECTIONS: [Direction; 4] = [
+    Direction::Up,
+    Direction::Down,
+    Direction::Left,
+    Direction::Right,
+];
 
 impl Direction {
     fn reverse(&self) -> Direction {
@@ -102,25 +119,70 @@ pub struct GameMove {
 }
 
 pub const GAME_MOVES: [GameMove; ROBOT_COUNT * 4] = [
-    GameMove { robot_index: 0, direction: DIRECTIONS[0]}, 
-    GameMove { robot_index: 0, direction: DIRECTIONS[1]}, 
-    GameMove { robot_index: 0, direction: DIRECTIONS[2]}, 
-    GameMove { robot_index: 0, direction: DIRECTIONS[3]}, 
-
-    GameMove { robot_index: 1, direction: DIRECTIONS[0]}, 
-    GameMove { robot_index: 1, direction: DIRECTIONS[1]}, 
-    GameMove { robot_index: 1, direction: DIRECTIONS[2]}, 
-    GameMove { robot_index: 1, direction: DIRECTIONS[3]}, 
-
-    GameMove { robot_index: 2, direction: DIRECTIONS[0]}, 
-    GameMove { robot_index: 2, direction: DIRECTIONS[1]}, 
-    GameMove { robot_index: 2, direction: DIRECTIONS[2]}, 
-    GameMove { robot_index: 2, direction: DIRECTIONS[3]}, 
-
-    GameMove { robot_index: 3, direction: DIRECTIONS[0]}, 
-    GameMove { robot_index: 3, direction: DIRECTIONS[1]}, 
-    GameMove { robot_index: 3, direction: DIRECTIONS[2]}, 
-    GameMove { robot_index: 3, direction: DIRECTIONS[3]}, 
+    GameMove {
+        robot_index: 0,
+        direction: DIRECTIONS[0],
+    },
+    GameMove {
+        robot_index: 0,
+        direction: DIRECTIONS[1],
+    },
+    GameMove {
+        robot_index: 0,
+        direction: DIRECTIONS[2],
+    },
+    GameMove {
+        robot_index: 0,
+        direction: DIRECTIONS[3],
+    },
+    GameMove {
+        robot_index: 1,
+        direction: DIRECTIONS[0],
+    },
+    GameMove {
+        robot_index: 1,
+        direction: DIRECTIONS[1],
+    },
+    GameMove {
+        robot_index: 1,
+        direction: DIRECTIONS[2],
+    },
+    GameMove {
+        robot_index: 1,
+        direction: DIRECTIONS[3],
+    },
+    GameMove {
+        robot_index: 2,
+        direction: DIRECTIONS[0],
+    },
+    GameMove {
+        robot_index: 2,
+        direction: DIRECTIONS[1],
+    },
+    GameMove {
+        robot_index: 2,
+        direction: DIRECTIONS[2],
+    },
+    GameMove {
+        robot_index: 2,
+        direction: DIRECTIONS[3],
+    },
+    GameMove {
+        robot_index: 3,
+        direction: DIRECTIONS[0],
+    },
+    GameMove {
+        robot_index: 3,
+        direction: DIRECTIONS[1],
+    },
+    GameMove {
+        robot_index: 3,
+        direction: DIRECTIONS[2],
+    },
+    GameMove {
+        robot_index: 3,
+        direction: DIRECTIONS[3],
+    },
 ];
 
 type WallBoard = [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE];
@@ -128,11 +190,11 @@ type WallCache = [[[u8; 4]; BOARD_SIZE]; BOARD_SIZE];
 
 const THREE_PERMUTATION_SWAPS: LazyCell<[usize; 5]> = LazyCell::new(|| {
     let v = permutation_swaps(3);
-    array::from_fn(|i| { *v.get(i).unwrap() })
+    array::from_fn(|i| *v.get(i).unwrap())
 });
 const FOUR_PERMUTATION_SWAPS: LazyCell<[usize; 23]> = LazyCell::new(|| {
     let v = permutation_swaps(4);
-    array::from_fn(|i| { *v.get(i).unwrap() })
+    array::from_fn(|i| *v.get(i).unwrap())
 });
 
 #[derive(Debug)]
@@ -170,7 +232,12 @@ impl GameSpec {
             }
         }
 
-        return GameSpec { walls, goal, target_type, wall_cache }
+        return GameSpec {
+            walls,
+            goal,
+            target_type,
+            wall_cache,
+        };
     }
 
     pub fn prev_states(&self, current_state: &GameState) -> Vec<GameState> {
@@ -179,7 +246,9 @@ impl GameSpec {
             for back_direction in DIRECTIONS {
                 let direction = back_direction.reverse();
                 let mut position = current_state.robots[robot_index];
-                if !(_has_wall(&self.walls, position, direction) || current_state.has_robot(position + Point::from(direction))) {
+                if !(_has_wall(&self.walls, position, direction)
+                    || current_state.has_robot(position + Point::from(direction)))
+                {
                     continue;
                 }
 
@@ -203,13 +272,18 @@ impl GameSpec {
     }
 
     pub fn next_states(&self, current_state: &GameState) -> [GameState; ROBOT_COUNT * 4] {
-        let mut results = array::from_fn(|_| { current_state.clone() });
+        let mut results = array::from_fn(|_| current_state.clone());
         let mut ptr = 0;
         for robot_index in 0..ROBOT_COUNT {
             for direction in DIRECTIONS {
-                let position = current_state.robots[robot_index]; 
-                let wall_steps = self.wall_cache[position.r as usize][position.c as usize][direction as usize];
-                let robot_steps = if wall_steps > 0 { current_state.robot_steps(robot_index, direction) } else { 0 };
+                let position = current_state.robots[robot_index];
+                let wall_steps =
+                    self.wall_cache[position.r as usize][position.c as usize][direction as usize];
+                let robot_steps = if wall_steps > 0 {
+                    current_state.robot_steps(robot_index, direction)
+                } else {
+                    0
+                };
                 let steps = min(wall_steps, robot_steps);
                 results[ptr].robots[robot_index] = position + Point::from(direction) * steps as i8;
                 ptr += 1;
@@ -220,13 +294,16 @@ impl GameSpec {
 
     pub fn is_winning_state(&self, state: &GameState) -> bool {
         match self.target_type {
-            TargetType::Any => state.robots.into_iter().any(|position| { position == self.goal }),
+            TargetType::Any => state
+                .robots
+                .into_iter()
+                .any(|position| position == self.goal),
             TargetType::Particular(robot_index) => state.robots[robot_index] == self.goal,
         }
     }
 
     pub fn equivalent_states_any(&self, state: &GameState) -> [GameState; factorial(ROBOT_COUNT)] {
-        let mut result: [GameState; factorial(ROBOT_COUNT)] = array::from_fn(|_| { state.clone() });
+        let mut result: [GameState; factorial(ROBOT_COUNT)] = array::from_fn(|_| state.clone());
         let mut state = state.clone();
         for (i, pos) in FOUR_PERMUTATION_SWAPS.into_iter().enumerate() {
             state.robots.swap(pos, pos + 1);
@@ -235,11 +312,17 @@ impl GameSpec {
         result
     }
 
-    pub fn equivalent_states_particular(&self, state: &GameState, robot_index: usize) -> [GameState; factorial(ROBOT_COUNT - 1)] {
-        let mut result: [GameState; factorial(ROBOT_COUNT - 1)] = array::from_fn(|_| { state.clone() });
+    pub fn equivalent_states_particular(
+        &self,
+        state: &GameState,
+        robot_index: usize,
+    ) -> [GameState; factorial(ROBOT_COUNT - 1)] {
+        let mut result: [GameState; factorial(ROBOT_COUNT - 1)] = array::from_fn(|_| state.clone());
         let mut state = state.clone();
         for (i, pos) in THREE_PERMUTATION_SWAPS.into_iter().enumerate() {
-            state.robots.swap(skipone(pos, robot_index), skipone(pos + 1, robot_index));
+            state
+                .robots
+                .swap(skipone(pos, robot_index), skipone(pos + 1, robot_index));
             result[i + 1] = state.clone();
         }
         result
@@ -248,7 +331,9 @@ impl GameSpec {
     pub fn equivalent_states(&self, state: &GameState) -> Vec<GameState> {
         match self.target_type {
             TargetType::Any => self.equivalent_states_any(state).to_vec(),
-            TargetType::Particular(robot_index) => self.equivalent_states_particular(state, robot_index).to_vec(),
+            TargetType::Particular(robot_index) => self
+                .equivalent_states_particular(state, robot_index)
+                .to_vec(),
         }
     }
 }
@@ -281,10 +366,21 @@ impl GameState {
         let mut steps = BOARD_SIZE as u8;
         for robot_index in 0..ROBOT_COUNT {
             let steps_candidate = match direction {
-                Direction::Up => calc_up_steps(self.robots[moving_robot_index], self.robots[robot_index]),
-                Direction::Right => calc_up_steps(self.robots[moving_robot_index].rot(), self.robots[robot_index].rot()),
-                Direction::Down => calc_up_steps(self.robots[moving_robot_index].rot().rot(), self.robots[robot_index].rot().rot()),
-                Direction::Left => calc_up_steps(self.robots[moving_robot_index].rrot(), self.robots[robot_index].rrot()),
+                Direction::Up => {
+                    calc_up_steps(self.robots[moving_robot_index], self.robots[robot_index])
+                }
+                Direction::Right => calc_up_steps(
+                    self.robots[moving_robot_index].rot(),
+                    self.robots[robot_index].rot(),
+                ),
+                Direction::Down => calc_up_steps(
+                    self.robots[moving_robot_index].rot().rot(),
+                    self.robots[robot_index].rot().rot(),
+                ),
+                Direction::Left => calc_up_steps(
+                    self.robots[moving_robot_index].rrot(),
+                    self.robots[robot_index].rrot(),
+                ),
             };
             steps = min(steps, steps_candidate);
         }
@@ -300,6 +396,8 @@ impl GameState {
     }
 
     fn has_robot(&self, position: Point) -> bool {
-        self.robots.into_iter().any(|robot_position| { robot_position == position })
+        self.robots
+            .into_iter()
+            .any(|robot_position| robot_position == position)
     }
 }
