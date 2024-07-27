@@ -53,7 +53,7 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
         }
     }
 
-    return available_cells
+    available_cells
         .into_iter()
         .permutations(ROBOT_COUNT - 1)
         .map(|points| {
@@ -65,16 +65,15 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
                     robots[i + 1] = point
                 }
             }
-            GameState { robots: robots }
+            GameState { robots }
         })
-        .collect();
+        .collect()
 }
 
 fn all_winning_states(spec: &GameSpec) -> Vec<GameState> {
     match spec.target_type {
         model::TargetType::Particular(target_robot) => winning_states(spec, target_robot),
         model::TargetType::Any => (0..ROBOT_COUNT)
-            .into_iter()
             .flat_map(|robot_index| winning_states(spec, robot_index).into_iter())
             .collect(),
     }
@@ -112,7 +111,7 @@ pub fn reverse_bfs(spec: &GameSpec) -> GameState {
             q.push_back(next_state);
         }
     }
-    return visiting_state.unwrap();
+    visiting_state.unwrap()
 }
 
 fn main() {

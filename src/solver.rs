@@ -32,7 +32,7 @@ pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
         }
     }
 
-    if final_state == None {
+    if final_state.is_none() {
         return Vec::new();
     }
     let mut state = final_state.unwrap();
@@ -48,5 +48,5 @@ pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
         }
     }
     moves.reverse();
-    return moves;
+    moves
 }

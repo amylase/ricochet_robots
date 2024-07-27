@@ -18,7 +18,7 @@ pub fn permutation_swaps(n: usize) -> Vec<usize> {
             }
         }
     }
-    return swap_position;
+    swap_position
 }
 
 fn permutations(n: usize) -> Vec<Vec<usize>> {

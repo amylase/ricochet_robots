@@ -54,7 +54,7 @@ pub fn load(base64: &str) -> (GameSpec, GameState) {
             let idx = r * BOARD_SIZE + c;
             let wall_state = base[idx];
             // (msb) LDRU (lsb)
-            if wall_state / 1 % 2 == 0 {
+            if wall_state % 2 == 0 {
                 walls[wall_r - 1][wall_c] = true;
             }
             if wall_state / 2 % 2 == 0 {
@@ -71,7 +71,7 @@ pub fn load(base64: &str) -> (GameSpec, GameState) {
 
     let spec = GameSpec::new(walls, goal, target_type);
     let state = GameState { robots };
-    return (spec, state);
+    (spec, state)
 }
 
 pub fn dump(spec: &GameSpec, state: &GameState) -> String {
@@ -83,16 +83,16 @@ pub fn dump(spec: &GameSpec, state: &GameState) -> String {
             let wall_c = c * 2 + 1;
             let mut wall_state = 0;
             // (msb) LDRU (lsb)
-            if spec.walls[wall_r - 1][wall_c] == false {
+            if !spec.walls[wall_r - 1][wall_c] {
                 wall_state |= 1 << 0;
             }
-            if spec.walls[wall_r][wall_c + 1] == false {
+            if !spec.walls[wall_r][wall_c + 1] {
                 wall_state |= 1 << 1;
             }
-            if spec.walls[wall_r + 1][wall_c] == false {
+            if !spec.walls[wall_r + 1][wall_c] {
                 wall_state |= 1 << 2;
             }
-            if spec.walls[wall_r][wall_c - 1] == false {
+            if !spec.walls[wall_r][wall_c - 1] {
                 wall_state |= 1 << 3;
             }
             base16.push(wall_state)
@@ -100,7 +100,7 @@ pub fn dump(spec: &GameSpec, state: &GameState) -> String {
     }
 
     // normal goal + wild goal
-    let nongoal = Point::new(spec.goal.r + 1 & 15, spec.goal.c + 1 & 15);
+    let nongoal = Point::new((spec.goal.r + 1) & 15, (spec.goal.c + 1) & 15);
     for _ in 0..(ROBOT_COUNT * 4 + 1) {
         write_point_to_vec(&mut base16, nongoal);
     }
@@ -125,13 +125,13 @@ pub fn dump(spec: &GameSpec, state: &GameState) -> String {
     }
 
     assert!(base16.len() == ID_LENGTH);
-    return to_base64(base16);
+    to_base64(base16)
 }
 
 fn read_point_from_array(arr: &[u8], i: usize) -> Point {
     let ci = i * 2;
     let ri = ci + 1;
-    return Point::new(arr[ri] as i8, arr[ci] as i8);
+    Point::new(arr[ri] as i8, arr[ci] as i8)
 }
 
 fn write_point_to_vec(vec: &mut Vec<u8>, point: Point) {
@@ -140,16 +140,16 @@ fn write_point_to_vec(vec: &mut Vec<u8>, point: Point) {
 }
 
 fn base64char_to_int(code: u8) -> u8 {
-    if '0' as u8 <= code && code <= '9' as u8 {
-        return code - ('0' as u8);
-    } else if 'a' as u8 <= code && code <= 'z' as u8 {
-        return code - ('a' as u8) + 10;
-    } else if 'A' as u8 <= code && code <= 'Z' as u8 {
-        return code - ('A' as u8) + 10 + 26;
-    } else if code == '_' as u8 {
-        return 10 + 26 + 26;
-    } else if code == '-' as u8 {
-        return 10 + 26 + 26 + 1;
+    if code.is_ascii_digit() {
+        code - b'0'
+    } else if code.is_ascii_lowercase() {
+        code - b'a' + 10
+    } else if code.is_ascii_uppercase() {
+        code - b'A' + 10 + 26
+    } else if code == b'_' {
+        10 + 26 + 26
+    } else if code == b'-' {
+        10 + 26 + 26 + 1
     } else {
         panic!();
     }
@@ -157,15 +157,15 @@ fn base64char_to_int(code: u8) -> u8 {
 
 fn int_to_base64char(int: u8) -> char {
     if int < 10 {
-        return ('0' as u8 + int) as char;
-    } else if 10 <= int && int < 36 {
-        return ('a' as u8 + int - 10) as char;
-    } else if 36 <= int && int < 62 {
-        return ('A' as u8 + int - 36) as char;
+        (b'0' + int) as char
+    } else if (10..36).contains(&int) {
+        (b'a' + int - 10) as char
+    } else if (36..62).contains(&int) {
+        (b'A' + int - 36) as char
     } else if int == 62 {
-        return '_';
+        '_'
     } else if int == 63 {
-        return '-';
+        '-'
     } else {
         panic!();
     }
@@ -177,13 +177,13 @@ fn to_ints(base64: &str) -> Vec<u8> {
     let bytes = base64.as_bytes();
     let mut base16: Vec<u8> = vec![];
     for fr in (0..(base64.len())).step_by(2) {
-        let value = base64char_to_int(bytes[fr]) as u16 * (64 as u16)
-            + base64char_to_int(bytes[fr + 1]) as u16;
+        let value =
+            base64char_to_int(bytes[fr]) as u16 * 64_u16 + base64char_to_int(bytes[fr + 1]) as u16;
         base16.push((value / 256) as u8);
         base16.push((value / 16 % 16) as u8);
         base16.push((value % 16) as u8);
     }
-    return base16;
+    base16
 }
 
 fn to_base64(ints: Vec<u8>) -> String {
@@ -195,7 +195,7 @@ fn to_base64(ints: Vec<u8>) -> String {
         base64.push(int_to_base64char((value / 64) as u8));
         base64.push(int_to_base64char((value % 64) as u8));
     }
-    return base64;
+    base64
 }
 
 pub fn robot_index_to_color(robot_index: u8) -> &'static str {

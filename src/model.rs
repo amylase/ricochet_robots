@@ -1,7 +1,7 @@
-use std::cell::LazyCell;
 use std::convert::From;
 use std::hash::Hash;
 use std::ops;
+use std::sync::LazyLock;
 use std::{array, cmp::min};
 
 use crate::algorithm::{factorial, permutation_swaps};
@@ -42,10 +42,10 @@ impl ops::Add<Point> for Point {
     type Output = Point;
 
     fn add(self, rhs: Point) -> Self::Output {
-        return Point {
+        Point {
             r: self.r + rhs.r,
             c: self.c + rhs.c,
-        };
+        }
     }
 }
 
@@ -53,10 +53,10 @@ impl ops::Mul<i8> for Point {
     type Output = Point;
 
     fn mul(self, rhs: i8) -> Self::Output {
-        return Point {
+        Point {
             r: self.r * rhs,
             c: self.c * rhs,
-        };
+        }
     }
 }
 
@@ -188,11 +188,11 @@ pub const GAME_MOVES: [GameMove; ROBOT_COUNT * 4] = [
 type WallBoard = [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE];
 type WallCache = [[[u8; 4]; BOARD_SIZE]; BOARD_SIZE];
 
-const THREE_PERMUTATION_SWAPS: LazyCell<[usize; 5]> = LazyCell::new(|| {
+static THREE_PERMUTATION_SWAPS: LazyLock<[usize; 5]> = LazyLock::new(|| {
     let v = permutation_swaps(3);
     array::from_fn(|i| *v.get(i).unwrap())
 });
-const FOUR_PERMUTATION_SWAPS: LazyCell<[usize; 23]> = LazyCell::new(|| {
+static FOUR_PERMUTATION_SWAPS: LazyLock<[usize; 23]> = LazyLock::new(|| {
     let v = permutation_swaps(4);
     array::from_fn(|i| *v.get(i).unwrap())
 });
@@ -208,14 +208,14 @@ pub struct GameSpec {
 
 fn _has_wall(walls: &WallBoard, position: Point, direction: Direction) -> bool {
     let wall_position = position * 2 + Point::new(1, 1) + Point::from(direction);
-    return walls[wall_position.r as usize][wall_position.c as usize];
+    walls[wall_position.r as usize][wall_position.c as usize]
 }
 
 impl GameSpec {
     pub fn new(walls: WallBoard, goal: Point, target_type: TargetType) -> GameSpec {
         let mut wall_cache = [[[0; 4]; BOARD_SIZE]; BOARD_SIZE];
-        for r in 0..BOARD_SIZE {
-            for c in 0..BOARD_SIZE {
+        wall_cache.iter_mut().enumerate().for_each(|(r, row)| {
+            row.iter_mut().enumerate().for_each(|(c, cell)| {
                 for direction in DIRECTIONS {
                     let mut steps: u8 = 0;
                     let mut position = Point::new(r as i8, c as i8);
@@ -227,17 +227,17 @@ impl GameSpec {
                         position = next_position;
                         steps += 1;
                     }
-                    wall_cache[r][c][direction as usize] = steps;
+                    cell[direction as usize] = steps;
                 }
-            }
-        }
+            })
+        });
 
-        return GameSpec {
+        GameSpec {
             walls,
             goal,
             target_type,
             wall_cache,
-        };
+        }
     }
 
     pub fn prev_states(&self, current_state: &GameState) -> Vec<GameState> {
@@ -268,7 +268,7 @@ impl GameSpec {
                 }
             }
         }
-        return results;
+        results
     }
 
     pub fn next_states(&self, current_state: &GameState) -> [GameState; ROBOT_COUNT * 4] {
@@ -289,7 +289,7 @@ impl GameSpec {
                 ptr += 1;
             }
         }
-        return results;
+        results
     }
 
     pub fn is_winning_state(&self, state: &GameState) -> bool {
@@ -352,12 +352,10 @@ pub struct GameState {
 }
 
 fn calc_up_steps(from: Point, to: Point) -> u8 {
-    if from.c != to.c {
-        return BOARD_SIZE as u8;
-    } else if from.r <= to.r {
-        return BOARD_SIZE as u8;
+    if from.c != to.c || from.r <= to.r {
+        BOARD_SIZE as u8
     } else {
-        return (from.r - to.r - 1) as u8;
+        (from.r - to.r - 1) as u8
     }
 }
 
@@ -384,7 +382,7 @@ impl GameState {
             };
             steps = min(steps, steps_candidate);
         }
-        return steps;
+        steps
     }
 
     pub fn to_u32(&self) -> u32 {
