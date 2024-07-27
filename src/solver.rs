@@ -29,7 +29,10 @@ pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
             q.push_back(next_state);
         }
     }
-    assert!(final_state != None);
+
+    if final_state == None {
+        return Vec::new();
+    }
     let mut state = final_state.unwrap();
     let mut moves: Vec<GameMove> = vec![];
 

@@ -12,8 +12,8 @@ pub const WALL_MAP_SIZE: usize = BOARD_SIZE * 2 + 1;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Point {
-    r: i8,
-    c: i8,
+    pub r: i8,
+    pub c: i8,
 }
 
 impl Point {
@@ -56,6 +56,17 @@ pub enum Direction {
     Right = 3,
 }
 
+impl Direction {
+    fn reverse(&self) -> Direction {
+        match &self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
+}
+
 impl From<Direction> for Point {
     fn from(direction: Direction) -> Self {
         match direction {
@@ -83,9 +94,9 @@ type WallBoard = [[bool; WALL_MAP_SIZE]; WALL_MAP_SIZE];
 type WallCache = [[[u8; 4]; BOARD_SIZE]; BOARD_SIZE];
 #[derive(Debug)]
 pub struct GameSpec {
-    walls: WallBoard,
-    goal: Point,
-    target_type: TargetType,
+    pub walls: WallBoard,
+    pub goal: Point,
+    pub target_type: TargetType,
 
     wall_cache: WallCache,
 }
@@ -118,6 +129,36 @@ impl GameSpec {
 
         return GameSpec { walls, goal, target_type, wall_cache }
     }
+
+    pub fn prev_states(&self, current_state: &GameState) -> Vec<GameState> {
+        let mut results = Vec::new();
+        for robot_index in 0..ROBOT_COUNT {
+            for back_direction in Direction::iter() {
+                let direction = back_direction.reverse();
+                let mut position = current_state.robots[robot_index];
+                if !(_has_wall(&self.walls, position, direction) || current_state.has_robot(position + Point::from(direction))) {
+                    continue;
+                }
+
+                loop {
+                    if _has_wall(&self.walls, position, back_direction) {
+                        break;
+                    }
+                    let next_position = position + Point::from(back_direction);
+                    if current_state.has_robot(next_position) {
+                        break;
+                    }
+                    position = next_position;
+
+                    let mut next_state = current_state.clone();
+                    next_state.robots[robot_index] = position;
+                    results.push(next_state);
+                }
+            }
+        }
+        return results;
+    }
+
     pub fn next_states(&self, current_state: &GameState) -> Vec<(GameMove, GameState)> {
         let mut results: Vec<(GameMove, GameState)> = vec![(GameMove { robot_index: 0, direction: Direction::Up}, current_state.clone()); ROBOT_COUNT * 4];
         let mut ptr = 0;
@@ -185,6 +226,10 @@ impl GameState {
             x = x << 8 | (position.r as u32) << 4 | position.c as u32;
         }
         x
+    }
+
+    fn has_robot(&self, position: Point) -> bool {
+        self.robots.into_iter().any(|robot_position| { robot_position == position })
     }
 }
 
