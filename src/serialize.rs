@@ -125,7 +125,7 @@ pub fn dump(spec: &GameSpec, state: &GameState) -> String {
     }
 
     assert!(base16.len() == ID_LENGTH);
-    to_base64(base16)
+    to_base64(&base16)
 }
 
 fn read_point_from_array(arr: &[u8], i: usize) -> Point {
@@ -186,7 +186,7 @@ fn to_ints(base64: &str) -> Vec<u8> {
     base16
 }
 
-fn to_base64(ints: Vec<u8>) -> String {
+fn to_base64(ints: &[u8]) -> String {
     assert!(ints.len() % 3 == 0);
 
     let mut base64 = String::new();
@@ -207,3 +207,14 @@ pub fn robot_index_to_color(robot_index: u8) -> &'static str {
         _ => unreachable!(),
     }
 }
+
+pub fn unify_ids(spec_id: &str, state_id: &str) -> String {
+    let spec_ints = to_ints(spec_id);
+    let state_ints = to_ints(state_id);
+    let ints = [
+        &spec_ints[0..ROBOT_ID_START], 
+        &state_ints[ROBOT_ID_START..GOAL_ID_START], 
+        &spec_ints[GOAL_ID_START..ID_LENGTH]
+    ].concat();
+    to_base64(&ints)
+} 

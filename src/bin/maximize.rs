@@ -1,5 +1,5 @@
 use model::{GameSpec, GameState, Point};
-use ricochet_robots::{model, serialize, solver};
+use ricochet_robots::{model, serialize::{self, unify_ids}, solver};
 
 use std::{
     collections::{HashSet, VecDeque},
@@ -122,12 +122,13 @@ fn main() {
     let (spec, _) = serialize::load(&board);
 
     let farthest_state = reverse_bfs(&spec);
+    let maximized_id = dump(&spec, &farthest_state);
+    let external_id = unify_ids(&board, &maximized_id);
     println!("found a farthest state. solving a problem for this.");
     println!(
         "https://kaseken.github.io/ricochet_robots/#/?id={}",
-        dump(&spec, &farthest_state)
+        external_id
     );
-
     let result = solver::solve_bfs(&spec, &farthest_state);
     println!("found a solution with {} moves", result.len());
     for game_move in result {
