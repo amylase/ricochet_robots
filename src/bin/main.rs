@@ -5,7 +5,7 @@ use ricochet_robots::{serialize, solver};
 fn main() {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
-        let board = line.unwrap();
+        let board = line.unwrap().replace("https://kaseken.github.io/ricochet_robots/#/?id=", "");
         let (spec, state) = serialize::load(&board);
 
         let result = solver::solve_bfs(&spec, &state);

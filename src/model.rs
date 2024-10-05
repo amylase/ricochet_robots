@@ -1,6 +1,6 @@
 use std::convert::From;
 use std::hash::Hash;
-use std::ops;
+use std::{cmp, ops};
 use std::sync::LazyLock;
 use std::{array, cmp::min};
 
@@ -17,7 +17,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn new(r: i8, c: i8) -> Point {
+    pub const fn new(r: i8, c: i8) -> Point {
         Point { r, c }
     }
 
@@ -35,6 +35,10 @@ impl Point {
             r: self.c,
             c: -self.r,
         }
+    }
+
+    pub fn chebyshev(&self, other: &Point) -> i8 {
+        cmp::max((self.r - other.r).abs(), (self.c - other.c).abs())
     }
 }
 
