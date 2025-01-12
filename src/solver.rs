@@ -16,12 +16,12 @@ pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
     'mainloop: while !q.is_empty() {
         let current_state = q.pop_front().unwrap();
 
-        for (i, next_state) in spec.next_states(&current_state).into_iter().enumerate() {
+        for next_state in spec.next_states(&current_state).into_iter() {
             let next_state_id = next_state.to_u32() as usize;
             if *vis.get(next_state_id).unwrap() {
                 continue;
             }
-            back_edge.push((next_state.clone(), i, current_state.clone()));
+            back_edge.push((next_state.clone(), current_state.clone()));
             vis.set(next_state_id, true);
             if spec.is_winning_state(&next_state) {
                 final_state = Some(next_state);
@@ -38,11 +38,15 @@ pub fn solve_bfs(spec: &GameSpec, initial_state: &GameState) -> Vec<GameMove> {
     let mut moves: Vec<GameMove> = vec![];
 
     while state != *initial_state {
-        for (current_state, game_move_index, prev_state) in back_edge.iter() {
+        'onestep_loop: for (current_state, prev_state) in back_edge.iter() {
             if *current_state == state {
-                moves.push(GAME_MOVES[*game_move_index].clone());
-                state = prev_state.clone();
-                break;
+                for (i, next_state) in spec.next_states(prev_state).into_iter().enumerate() {
+                    if next_state == *current_state {
+                        moves.push(GAME_MOVES[i].clone());
+                        state = prev_state.clone();
+                        break 'onestep_loop;
+                    }
+                }
             }
         }
     }

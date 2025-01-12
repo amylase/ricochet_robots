@@ -1,7 +1,7 @@
 use ricochet_robots::{serialize, solver};
 
 fn main() {
-    let board = "rIrKXKX6XKN--Zf----j-n---L_n--XZv-B-__----A--L-m----L6------_-RJv-_-_X-Yv-RVvYvg1----nX--Z07LVvZv----KRLX-B-B-Q-_----7-L-_-Yv--Zf-_-----Q-RL-YvX---_-n---Zr----ZeXAXKXKjKXBdc_nswFJGt55_ObqFQksG5Mu0_7YO";
+    let board = "rKXKNKXKX6N----------n-------X-Zv--X--B-N-A---N-LL_--6----RL-YvZf-LVuX----RL-7Hg1-_--n--RJ07-m-Vv-B-LK--L-N-_L-7---7-lfm-------ZvL--------R-B--Zf----n-L---L--_leXKXAXKVeWD3RdjkRdjkRdjkRdjkRdjkR3Mkd5E0";
     let (spec, state) = serialize::load(board);
 
     let result = solver::solve_bfs(&spec, &state);
