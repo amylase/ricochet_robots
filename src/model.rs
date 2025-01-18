@@ -142,10 +142,15 @@ static FOUR_PERMUTATION_SWAPS: LazyLock<[usize; 23]> = LazyLock::new(|| {
 });
 
 #[derive(Debug)]
+pub struct Goal {
+    pub position: Point,
+    pub target_type: TargetType,
+}
+
+#[derive(Debug)]
 pub struct GameSpec {
     pub walls: WallBoard,
-    pub goal: Point,
-    pub target_type: TargetType,
+    pub goals: Vec<Goal>,
 
     wall_cache: WallCache,
 }
@@ -156,7 +161,7 @@ fn _has_wall(walls: &WallBoard, position: Point, direction: Direction) -> bool {
 }
 
 impl GameSpec {
-    pub fn new(walls: WallBoard, goal: Point, target_type: TargetType) -> GameSpec {
+    pub fn new(walls: WallBoard, goals: Vec<Goal>) -> GameSpec {
         let mut wall_cache = [[[0; 4]; BOARD_SIZE]; BOARD_SIZE];
         wall_cache.iter_mut().enumerate().for_each(|(r, row)| {
             row.iter_mut().enumerate().for_each(|(c, cell)| {
@@ -178,8 +183,7 @@ impl GameSpec {
 
         GameSpec {
             walls,
-            goal,
-            target_type,
+            goals,
             wall_cache,
         }
     }
@@ -237,13 +241,15 @@ impl GameSpec {
     }
 
     pub fn is_winning_state(&self, state: &GameState) -> bool {
-        match self.target_type {
-            TargetType::Any => state
-                .robots
-                .into_iter()
-                .any(|position| position == self.goal),
-            TargetType::Particular(robot_index) => state.robots[robot_index] == self.goal,
-        }
+        self.goals.iter().all(|goal| {
+            match goal.target_type {
+                TargetType::Any => state
+                    .robots
+                    .iter()
+                    .any(|position| position == &goal.position),
+                TargetType::Particular(robot_index) => state.robots[robot_index] == goal.position,
+            }
+        })
     }
 
     pub fn equivalent_states_any(&self, state: &GameState) -> [GameState; factorial(ROBOT_COUNT)] {
@@ -273,7 +279,8 @@ impl GameSpec {
     }
 
     pub fn equivalent_states(&self, state: &GameState) -> Vec<GameState> {
-        match self.target_type {
+        assert_eq!(self.goals.len(), 1, "equivalent_states only supports single goal");
+        match self.goals[0].target_type {
             TargetType::Any => self.equivalent_states_any(state).to_vec(),
             TargetType::Particular(robot_index) => self
                 .equivalent_states_particular(state, robot_index)

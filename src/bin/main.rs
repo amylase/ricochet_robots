@@ -5,7 +5,12 @@ use ricochet_robots::{serialize, solver};
 fn main() {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
-        let board = line.unwrap().replace("https://kaseken.github.io/ricochet_robots/#/?id=", "");
+        let line = line.unwrap();
+        let board = if line.starts_with("http") {
+            line.split("id=").nth(1).unwrap()
+        } else {
+            &line
+        };
         let (spec, state) = serialize::load(&board);
 
         let result = solver::solve_bfs(&spec, &state);

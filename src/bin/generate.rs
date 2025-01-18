@@ -1,4 +1,4 @@
-use model::{GameSpec, GameState, Point};
+use model::{GameSpec, GameState, Point, Goal};
 use ricochet_robots::{model::{self, TargetType}, serialize::{self}, solver};
 
 use std::collections::{HashSet, VecDeque};
@@ -13,8 +13,11 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
     let mut vis = HashSet::new();
     let mut q = VecDeque::new();
 
-    vis.insert(spec.goal);
-    q.push_back(spec.goal);
+    assert_eq!(spec.goals.len(), 1);
+    let goal_position = spec.goals[0].position;
+
+    vis.insert(goal_position);
+    q.push_back(goal_position);
 
     while !q.is_empty() {
         let position = q.pop_front().unwrap();
@@ -45,7 +48,7 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
             let c = c as i8;
             let wall_cell = Point::new(r * 2 + 1, c * 2 + 1);
             let field_cell = Point::new(r, c);
-            if vis.contains(&wall_cell) && field_cell != spec.goal {
+            if vis.contains(&wall_cell) && field_cell != goal_position {
                 available_cells.push(field_cell);
             }
         }
@@ -55,7 +58,7 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
         .into_iter()
         .permutations(ROBOT_COUNT - 1)
         .map(|points| {
-            let mut robots = [spec.goal; ROBOT_COUNT];
+            let mut robots = [goal_position; ROBOT_COUNT];
             for (i, point) in points.into_iter().enumerate() {
                 if i < goal_robot {
                     robots[i] = point
@@ -69,7 +72,8 @@ fn winning_states(spec: &GameSpec, goal_robot: usize) -> Vec<GameState> {
 }
 
 fn all_winning_states(spec: &GameSpec) -> Vec<GameState> {
-    match spec.target_type {
+    assert_eq!(spec.goals.len(), 1);
+    match spec.goals[0].target_type {
         model::TargetType::Particular(target_robot) => winning_states(spec, target_robot),
         model::TargetType::Any => (0..ROBOT_COUNT)
             .flat_map(|robot_index| winning_states(spec, robot_index).into_iter())
@@ -95,7 +99,7 @@ pub fn reverse_bfs(spec: &GameSpec) -> GameState {
 
     'mainloop: for winning_state in all_winning_states(spec) {
         for equivalent_state in
-            spec.equivalent_states_particular(&winning_state, spec.target_type.robot_index(0))
+            spec.equivalent_states_particular(&winning_state, spec.goals[0].target_type.robot_index(0))
         {
             if *vis.get(equivalent_state.to_u32() as usize).unwrap() {
                 continue 'mainloop;
@@ -114,7 +118,7 @@ pub fn reverse_bfs(spec: &GameSpec) -> GameState {
 
         'mainloop: for next_state in spec.prev_states(&visiting_state) {
             for equivalent_state in
-                spec.equivalent_states_particular(&next_state, spec.target_type.robot_index(0))
+                spec.equivalent_states_particular(&next_state, spec.goals[0].target_type.robot_index(0))
             {
                 if *vis.get(equivalent_state.to_u32() as usize).unwrap() {
                     continue 'mainloop;
@@ -217,7 +221,7 @@ fn generate_spec() -> GameSpec {
         } else { 
             TargetType::Any 
         }; 
-        return GameSpec::new(walls, goals[target_index], target_type)
+        return GameSpec::new(walls, vec![Goal { position: goals[target_index], target_type }])
     }
 }
 
