@@ -29,7 +29,8 @@ pub fn load(base64: &str) -> (GameSpec, GameState) {
     let normal_goal = &base16[NORMAL_GOAL_ID_START..(NORMAL_GOAL_ID_START + NORMAL_GOAL_ID_LENGTH)];
     let wild_goal = &base16[WILD_GOAL_ID_START..(WILD_GOAL_ID_START + WILD_GOAL_ID_LENGTH)];
     let robot = &base16[ROBOT_ID_START..(ROBOT_ID_START + ROBOT_ID_LENGTH)];
-    let goal_length = (base16.len() - GOAL_ID_START) / SINGLE_GOAL_ID_LENGTH * SINGLE_GOAL_ID_LENGTH;
+    let goal_count = ((base16.len() - GOAL_ID_START) / SINGLE_GOAL_ID_LENGTH).max(2);
+    let goal_length = goal_count * SINGLE_GOAL_ID_LENGTH;
     let goals = &base16[GOAL_ID_START..GOAL_ID_START + goal_length];
     assert!(goals.len() % SINGLE_GOAL_ID_LENGTH == 0);
 
